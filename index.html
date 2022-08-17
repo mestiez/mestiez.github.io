@@ -1,15 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unsociable</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.1/markdown-it.min.js"
+        integrity="sha512-SYfDUYPg5xspsG6OOpXU366G8SZsdHOhqk/icdrYJ2E/WKZxPxze7d2HD3AyXpT7U22PZ5y74xRpqZ6A2bJ+kQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        html {
+            font-family: 'Barlow', sans-serif;
+            color: #f2f2f2;
+            background-color: #09090f;
+            font-size: 1.3em;
+        }
+
+        .content {
+            max-width: 1000px;
+            width: calc(100vw - 20px);
+            margin: 20px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        a {
+            color: white;
+        }
+
+        #article-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #article-list>a {
+            margin-left: 0.5em;
+        }
+    </style>
 </head>
+
 <body>
-    <b>My thoughts</b>
-    <p>
-       In an attempt to become less reserved, I have created this public personal journal.
-    </p>
+    <div class="content">
+        <div id="article" style="display: none">
+            <div style="display: flex; flex-direction: row;">
+                <a href="/">return home</a>
+            </div>
+            <h1 id="title-header" style="margin-bottom: 0; margin-top: 0.5em">Loading...</h1>
+            <span id="date-display" style="opacity: 0.5; font-size: 0.9em">unknown date</span>
+            <div id="article-content"></div>
+        </div>
+
+        <div id="homepage" style="display: none">
+            <h1>My thoughts</h1>
+            <p>
+                In an attempt to become less reserved, I have created this public personal journal.
+            </p>
+            <div id="article-list">
+                loading...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const articles = [];
+
+        if (window.location.search) {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('a'))
+                loadArticle(params.get('a'));
+            else
+                loadArticleList();
+        } else {
+            loadArticleList();
+        }
+
+        function loadArticle(path) {
+            document.getElementById('article').style.display = null;
+            document.getElementById('homepage').style.display = 'none';
+
+            const articlesEndpoint = 'https://api.github.com/repos/mestiez/mestiez.github.io/contents/articles/' + path;
+            window.fetch(articlesEndpoint).then(d => d.json()).then(
+                data => {
+                    const container = document.getElementById('article-content')
+                    container.innerHTML = markdownit().render(atob(data.content));
+                    document.getElementById('title-header').innerText = data.name.split('.')[0];
+
+                    const article = {
+                        localPath: 'articles/' + data.name
+                    }
+                    getDate(article, date => {
+                        const elem = document.getElementById('date-display');
+                        elem.innerText = date.toLocaleDateString();
+                        elem.title = date.toString();
+                    });
+                }
+            );
+        }
+
+        function loadArticleList() {
+            const articlesEndpoint = 'https://api.github.com/repos/mestiez/mestiez.github.io/contents/articles';
+            window.fetch(articlesEndpoint).then(d => d.json()).then(
+                data => {
+                    for (const entry of data) {
+                        const article = {
+                            id: entry.name,
+                            name: entry.name.split('.')[0],
+                            fetch: entry.download_url,
+                            localPath: entry.path
+                        };
+                        articles.push(article)
+                    }
+
+                    generateListElement();
+                }
+            );
+        }
+
+        function getDate(article, action) {
+            const endpoint = `https://api.github.com/repos/mestiez/mestiez.github.io/commits?per_page=1&path=${article.localPath}`;
+            window.fetch(endpoint).then(d => d.json()).then(
+                data => {
+                    if (data.length > 0) {
+                        article.date = new Date(data[0].commit.committer.date);
+                        if (action)
+                            action(article.date);
+                    }
+                }
+            );
+        }
+
+        function generateListElement() {
+            document.getElementById('homepage').style.display = null;
+            document.getElementById('article').style.display = 'none';
+
+            const container = document.getElementById('article-list');
+            container.innerHTML = '<b>Articles</b>';
+
+            for (const article of articles) {
+                const link = document.createElement('a');
+                link.href = '/?a=' + article.id;
+                link.innerText = article.name;
+                container.append(link);
+            }
+        }
+    </script>
 </body>
+
 </html>
