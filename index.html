@@ -78,7 +78,7 @@
         if (window.location.search) {
             const params = new URLSearchParams(window.location.search);
             if (params.has('a'))
-                loadArticle(params.get('a'));
+                loadArticle(params.get('a').replaceAll('-', ' '));
             else
                 loadArticleList();
         } else {
@@ -108,23 +108,34 @@
             );
         }
 
-        function loadArticleList() {
+        async function loadArticleList() {
             const articlesEndpoint = 'https://api.github.com/repos/mestiez/mestiez.github.io/contents/articles';
-            window.fetch(articlesEndpoint).then(d => d.json()).then(
-                data => {
-                    for (const entry of data) {
-                        const article = {
-                            id: entry.name,
-                            name: entry.name.split('.')[0],
-                            fetch: entry.download_url,
-                            localPath: entry.path
-                        };
-                        articles.push(article)
-                    }
+            const data = await (await window.fetch(articlesEndpoint)).json();
 
-                    generateListElement();
-                }
-            );
+            for (const entry of data) {
+                const article = {
+                    id: entry.name.replaceAll(' ', '-'),
+                    name: entry.name.split('.')[0],
+                    fetch: entry.download_url,
+                    localPath: entry.path
+                };
+
+                await getDateAsync(article);
+
+                articles.push(article)
+                articles.sort((a, b) => b.date.getTime() - a.date.getTime());
+                generateListElement();
+            }
+        }
+
+        async function getDateAsync(article) {
+            const endpoint = `https://api.github.com/repos/mestiez/mestiez.github.io/commits?per_page=1&path=${article.localPath}`;
+            const response = await window.fetch(endpoint);
+            const data = await response.json();
+
+            if (data.length > 0) {
+                article.date = new Date(data[0].commit.committer.date);
+            }
         }
 
         function getDate(article, action) {
