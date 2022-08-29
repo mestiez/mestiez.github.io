@@ -1,0 +1,5 @@
+I have a Discord server to share my work and gather indirect feedback, which is valuable to me. Obviously this means I deal with online people a lot. Most of them are completely normal people. Some of them, the loudest ones, are **terminally online**. It _seems_ like they have detached from reality and care about the events on a Discord server more than they care about events in the real world. That's fine. However, these people tend to project their unreasonable concern for the online world onto everyone else. 
+
+I'm writing this cute little article to express to absolutely nobody that I seriously do not care as much as it may seem. These online platforms are nothing to me other than a place to gather feedback and share progress. 99.99% of what I do there is not personal nor significant. I'm not interested. Be nice to each other!!!
+
+![sponsbob](https://c.tenor.com/rQFp5O-LzacAAAAC/spongebob-sick.gif)
